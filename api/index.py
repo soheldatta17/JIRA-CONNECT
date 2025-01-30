@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 import requests
 from flask_cors import CORS
@@ -21,7 +21,7 @@ def home():
     routes = {
         "/domain-check": "Check if Jira server is reachable",
         "/proj-check": "Check if the project exists in Jira",
-        "/create-issue": "Create a new issue in Jira",
+        "/create-issue": "Create a new issue in Jira (pass JSON with summary, description, and issue type)",
         "/fetch-issue": "Fetch issues from the SCRUM project"
     }
     return jsonify({
@@ -51,13 +51,23 @@ def check_project_exists():
 
 @app.route("/create-issue", methods=["POST"])
 def create_issue():
+    """Create a new issue in Jira with dynamic summary, description, and issue type."""
+    data = request.get_json() 
+    
+    summary = data.get("summary")
+    description = data.get("description")
+    issue_type = data.get("issuetype", "Task")  
+    
+    if not summary or not description:
+        return jsonify({"message": "❌ Summary and description are required!"}), 400
+
     url = f"{JIRA_API_URL}/issue"
     issue_data = {
         "fields": {
             "project": {"key": PROJECT_KEY},
-            "summary": "New Issue from Flask App",
-            "description": "Creating an issue through Flask API",
-            "issuetype": {"name": "Task"},
+            "summary": summary,
+            "description": description,
+            "issuetype": {"name": issue_type},
         }
     }
     response = requests.post(url, json=issue_data, auth=(ATLASSIAN_USERNAME, ATLASSIAN_API_KEY))
