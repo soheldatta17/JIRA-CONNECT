@@ -16,6 +16,10 @@ PROJECT_KEY = os.getenv("PROJECT_KEY")
 
 JIRA_API_URL = f"https://{DOMAIN}.atlassian.net/rest/api/2"
 
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Welcome to the Jira Flask API!"}), 200
+
 @app.route("/domain-check", methods=["GET"])
 def check_jira_connection():
     url = f"{JIRA_API_URL}/myself"
